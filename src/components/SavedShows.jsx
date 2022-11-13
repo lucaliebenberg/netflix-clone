@@ -1,35 +1,36 @@
 import React, { useState, useEffect } from "react";
-import { UserAuth } from "../context/AuthContext";
 import { MdChevronLeft, MdChevronRight } from "react-icons/md";
+import { UserAuth } from "../context/AuthContext";
 import { db } from "../firebase";
 import { updateDoc, doc, onSnapshot } from "firebase/firestore";
 import { AiOutlineClose } from "react-icons/ai";
 
 const SavedShows = () => {
-  const [movies, setMovies] = useState("");
+  const [movies, setMovies] = useState([]);
   const { user } = UserAuth();
 
   const slideLeft = () => {
     var slider = document.getElementById("slider");
     slider.scrollLeft = slider.scrollLeft - 500;
   };
-
   const slideRight = () => {
     var slider = document.getElementById("slider");
     slider.scrollLeft = slider.scrollLeft + 500;
   };
 
   useEffect(() => {
-    onSnapshot(
-      doc(db, "users", `${user?.email}`, (doc) => {
-        setMovies(doc.data()?.SavedShows);
-      })
-    );
+    onSnapshot(doc(db, "users", `${user?.email}`), (doc) => {
+      setMovies(doc.data()?.savedShows);
+    });
   }, [user?.email]);
 
   const movieRef = doc(db, "users", `${user?.email}`);
   const deleteShow = async (passedID) => {
     try {
+      const result = movies.filter((item) => item.id !== passedID);
+      await updateDoc(movieRef, {
+        savedShows: result,
+      });
     } catch (error) {
       console.log(error);
     }
@@ -48,9 +49,9 @@ const SavedShows = () => {
           id={"slider"}
           className="w-full h-full overflow-x-scroll whitespace-nowrap scroll-smooth scrollbar-hide relative"
         >
-          {movies.map((item, id) => (
+          {movies.map((item) => (
             <div
-              key={id}
+              key={item.id}
               className="w-[160px] sm:w-[200px] md:w-[240px] lg:w-[280px] inline-block cursor-pointer relative p-2"
             >
               <img
